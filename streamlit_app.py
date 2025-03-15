@@ -194,7 +194,13 @@ def plot_animation(intermediate_results, tokens):
 
 # Main Streamlit app
 def main():
-    st.set_page_config(layout="wide")
+    # Set page title and icon
+    st.set_page_config(
+        page_title="3D Embedding Visualizer",
+        page_icon="thumbnail/3d_embedding_viz.png",
+        layout="wide"
+    )
+
     margins_css = """
         <style>
             [data-testid="stSidebarHeader"] {
