@@ -55,7 +55,9 @@ def reduce_dimensions(vectors, method="tsne", iterations=None):
         pca = PCA(n_components=3, random_state=42)
         reduced_vectors = pca.fit_transform(vectors)
     elif method == "umap":
-        reducer = umap.UMAP(n_components=3, n_jobs=-1, n_epochs=500)
+        if iterations is None:
+            iterations = 1
+        reducer = umap.UMAP(n_components=3, n_jobs=-1, n_epochs=max(iterations, 250))
         reduced_vectors = reducer.fit_transform(vectors)
     else:
         raise ValueError("Unknown dimensionality reduction method.")
@@ -71,6 +73,7 @@ def scatter_plot(reduced_vectors, tokens):
         text='tokens', opacity=0.8,
         color_discrete_sequence=px.colors.qualitative.G10  # Optional: display token names
     )
+
     # Adjust the figure size
     fig.update_layout(
         autosize=True,
@@ -211,7 +214,8 @@ def main():
                 left: 0rem;
             }
             [data-testid="stMainBlockContainer"] {
-                padding-bottom:0rem;            
+                height: 100%;
+                width: 100%;        
             }
         </style>
     """
@@ -223,7 +227,7 @@ def main():
     # Sidebar for model and dimensionality reduction method
     selected_type = st.sidebar.segmented_control("Data Type:", ['Image', 'Text'], )
     dr_method = st.sidebar.selectbox("Dimensionality Reduction Method", ["pca", "tsne", "umap"])
-    iterations = st.sidebar.slider("Iterations (for TSNE)", min_value=250, max_value=3000, step=10, value=500)
+    iterations = st.sidebar.slider("Iterations (for TSNE, & UMAP)", min_value=250, max_value=2000, step=10, value=500)
 
     if selected_type=='Image':
         # User input
@@ -232,73 +236,68 @@ def main():
 
         if st.sidebar.button("Visualize Embeddings", type='primary'):
 
+            
             if selected_type=="IRIS":
 
+                status = st.sidebar.status("Generating 3D Word Embedding...", expanded=True)
+                
+                status.write('Loading IRIS dataset...')
                 X, y = datasets.load_iris(return_X_y=True)
 
+                status.write('Reducing Dimensionality...')
                 reduced_vectors = reduce_dimensions(X, method=dr_method, iterations=iterations if dr_method == "tsne" else None)
                 # Plotting
-                # status.write('Creating 3D scatter plot...')
+                status.write('Creating 3D scatter plot...')
                 image_scatter_plot(reduced_vectors, y)
+                status.update(label="Created 3D Embedding Space!", state="complete", expanded=False)
 
             elif selected_type=="MNIST":
 
+                status = st.sidebar.status("Generating 3D Word Embedding...", expanded=True)
+                
+                status.write('Loading MNIST dataset...')
                 X, y = datasets.load_digits(return_X_y=True)
 
+                status.write('Reducing Dimensionality...')
                 reduced_vectors = reduce_dimensions(X, method=dr_method, iterations=iterations if dr_method == "tsne" else None)
                 # Plotting
-                # status.write('Creating 3D scatter plot...')
+                status.write('Creating 3D scatter plot...')
                 image_scatter_plot(reduced_vectors, y)
+                status.update(label="Created 3D Embedding Space!", state="complete", expanded=False)
 
             elif selected_type=="BREAST CANCER":
 
+                status = st.sidebar.status("Generating 3D Word Embedding...", expanded=True)
+                
+                status.write('Loading BREAST CANCER dataset...')
+
                 X_digits, y_digits = datasets.load_breast_cancer(return_X_y=True)
 
+                status.write('Reducing Dimensionality...')
                 reduced_vectors = reduce_dimensions(X_digits, method=dr_method, iterations=iterations if dr_method == "tsne" else None)
                 # Plotting
-                # status.write('Creating 3D scatter plot...')
+                status.write('Creating 3D scatter plot...')
                 image_scatter_plot(reduced_vectors, y_digits)
+                status.update(label="Created 3D Embedding Space!", state="complete", expanded=False)
 
             elif selected_type=="OLIVERTTI FACES":
 
+                status = st.sidebar.status("Generating 3D Word Embedding...", expanded=True)
+                
+                status.write('Loading OLIVERTTI FACES dataset...')
+
                 X_digits, y_digits = datasets.fetch_olivetti_faces(return_X_y=True)
 
+                status.write('Reducing Dimensionality...')
                 reduced_vectors = reduce_dimensions(X_digits, method=dr_method, iterations=iterations if dr_method == "tsne" else None)
                 # Plotting
-                # status.write('Creating 3D scatter plot...')
+                status.write('Creating 3D scatter plot...')
                 image_scatter_plot(reduced_vectors, y_digits)
+                status.update(label="Created 3D Embedding Space!", state="complete", expanded=False)
 
             else:
                 st.warning("Select a Dataset")
 
-
-        #         # Applying Dimensionality Reduction
-        #         if len(words)>7:
-        #             status.write(f'Applying Dimensionality Reduction...')
-        #             reduced_vectors = reduce_dimensions(vectors, method=dr_method, iterations=iterations if dr_method == "tsne" else None)
-        #             # Plotting
-        #             status.write('Creating 3D scatter plot...')
-        #             scatter_plot(reduced_vectors, words)
-        #             status.update(label="Created 3D Embedding Space!", state="complete", expanded=False)
-        #         else:
-        #             status.update(label="Need a longer text!", state='error', expanded=True)
-        #             st.warning('Enter a longer paragraph')
-        #     else:
-        #         st.warning("Please enter a paragraph.")
-
-
-
-
-
-
-        
-        # # Example vector and tokens (replace with real data)
-        # vectors = np.random.rand(100, 50)  # Example high-dimensional data
-        # tokens = [f"Token {i}" for i in range(100)]
-
-        # intermediate_results = reduce_dimensions_with_animation(vectors, method="tsne", n_iter=500)
-        # if intermediate_results:
-        #     plot_animation(intermediate_results, tokens)
 
     elif selected_type=='Text':
         # User input
